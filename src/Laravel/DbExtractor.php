@@ -19,6 +19,7 @@ class DbExtractor extends AbstractExtractor
     /** @var string */
     protected $updateColumn = 'updated_at';
 
+
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
@@ -65,7 +66,7 @@ class DbExtractor extends AbstractExtractor
             }
 
             foreach ($results as $result) {
-                yield (array) $result;
+                yield (array)$result;
             }
 
             $lastId = $results->last()->_hash;
@@ -81,29 +82,29 @@ class DbExtractor extends AbstractExtractor
         if ($this->connection instanceof MySqlConnection) {
             $query->addSelect(
                 $this->connection->raw(
-                    'MD5(CONCAT_WS("|", '
+                    'CONCAT_WS("|", '
                     . collect($this->getUniqueColumns())->implode(', ')
-                    . ')) as `_hash`'
+                    . ') as `_hash`'
                 )
             );
         } elseif ($this->connection instanceof SqlServerConnection) {
             $query->addSelect(
                 $this->connection->raw(
-                    "LOWER(CONVERT(varchar(32), HASHBYTES('md5', "
+                    '('
                     . collect($this->getUniqueColumns())
                         ->map(function ($uniqueColumn) {
                             return 'CAST(' . $this->connection->getQueryGrammar()->wrap($uniqueColumn) . ' as varchar)';
                         })
                         ->implode(" + '|' + ")
-                    . '), 2)) as [_hash]'
+                    . ') as [_hash]'
                 )
             );
         } elseif ($this->connection instanceof PostgresConnection) {
             $query->addSelect(
                 $this->connection->raw(
-                    "MD5(CONCAT_WS('|', "
+                    "CONCAT_WS('|', "
                     . collect($this->getUniqueColumns())->implode(',')
-                    . ')) AS "_hash"'
+                    . ') AS "_hash"'
                 )
             );
         } else {
